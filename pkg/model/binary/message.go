@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/binary"
 	"io"
+	"math"
 )
 
 type Message struct {
@@ -18,7 +19,7 @@ func ReadMessage(r io.Reader) (*Message, error) {
 
 	reader := bufio.NewReader(r)
 
-	version, err := binary.ReadUvarint(reader)
+	version, err := readVarintInRange(r, 127)
 	if err != nil {
 		return nil, err
 	}
@@ -27,12 +28,13 @@ func ReadMessage(r io.Reader) (*Message, error) {
 		return nil, ErrUnsupportedVersion
 	}
 
-	var data struct {
-		Parent1 [32]byte
-		Parent2 [32]byte
+	parent1, err := readBytes(r, 32)
+	if err != nil {
+		return nil, err
 	}
 
-	if err := binary.Read(reader, binary.LittleEndian, &data); err != nil {
+	parent2, err := readBytes(r, 32)
+	if err != nil {
 		return nil, err
 	}
 
@@ -45,18 +47,18 @@ func ReadMessage(r io.Reader) (*Message, error) {
 		return nil, err
 	}
 
-	var nonce uint64
-	if err := binary.Read(reader, binary.LittleEndian, &nonce); err != nil {
+	nonce, err := readUint64(reader)
+	if err != nil {
 		return nil, err
 	}
 
 	message := &Message{
 		Version: 1,
-		Parent1: data.Parent1,
-		Parent2: data.Parent2,
 		Payload: payload,
 		Nonce:   nonce,
 	}
+	copy(message.Parent1[:], parent1)
+	copy(message.Parent2[:], parent2)
 
 	return message, nil
 }
@@ -65,7 +67,8 @@ func readPayload(r io.Reader) (Payload, error) {
 
 	reader := bufio.NewReader(r)
 
-	payloadLength, err := binary.ReadUvarint(reader)
+	// TODO: define max
+	payloadLength, err := readVarintInRange(reader, math.MaxUint64)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +79,6 @@ func readPayload(r io.Reader) (Payload, error) {
 
 	// Peek the payload type
 	payloadTypeBytes, err := reader.Peek(10)
-
 	payloadType, n := binary.Uvarint(payloadTypeBytes)
 	if n < 0 {
 		return nil, ErrWrongPayloadType
@@ -89,22 +91,22 @@ func readPayload(r io.Reader) (Payload, error) {
 	switch PayloadType(payloadType) {
 
 	case PayloadTypeSignedTransaction:
-		return nil, nil
+		return readSignedTransaction(payloadReader)
 
 	case PayloadTypeMilestone:
-		return ReadMilestone(payloadReader)
+		return readMilestone(payloadReader)
 
 	case PayloadTypeUnsignedData:
-		return ReadUnsignedData(payloadReader)
+		return readUnsignedData(payloadReader)
 
 	case PayloadTypeSignedData:
-		return ReadSignedData(payloadReader)
+		return readSignedData(payloadReader)
 
 	case PayloadTypeIndexation:
-		return ReadIndexation(payloadReader)
+		return readIndexation(payloadReader)
 
 	default:
-		// ignore the payload data but do not return error, we need to keep the message around
+		// ignore the payload data but do not return an error, we need to keep the message around
 		reader.Discard(int(payloadLength))
 		unsupported := &UnsupportedPayload{
 			payloadType: PayloadType(payloadType),

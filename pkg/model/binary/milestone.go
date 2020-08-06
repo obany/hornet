@@ -25,10 +25,10 @@ func NewMilestone(index milestone.Index, merkleProof [64]byte) *Milestone {
 	}
 }
 
-func ReadMilestone(r io.Reader) (*Milestone, error) {
+func readMilestone(r io.Reader) (*Milestone, error) {
 
 	if err := readAndCheckPayloadType(r, PayloadTypeMilestone); err != nil {
-		return nil
+		return nil, err
 	}
 
 	index, err := readVarintInRange(r, math.MaxUint32)
@@ -71,23 +71,25 @@ func (m *Milestone) UpdateSignature(signature [64]byte) {
 
 func (m Milestone) Write(w io.Writer) error {
 
-	var encodedType = make([]byte, 1)
-	binary.PutUvarint(encodedType, uint64(m.GetType()))
-	if _, err := w.Write(encodedType); err != nil {
+	if err := writePayloadType(w, m); err != nil {
 		return nil
 	}
 
-	var data = []interface{}{
-		uint32(m.Index),
-		m.Timestamp,
-		m.MerkleProof,
-		m.Signature,
+	if err := writeVarint(w, uint64(m.Index)); err != nil {
+		return nil
 	}
 
-	for _, v := range data {
-		if err := binary.Write(w, binary.LittleEndian, v); err != nil {
-			return err
-		}
+	if err := writeUint64(w, m.Timestamp); err != nil {
+		return nil
 	}
+
+	if err := writeBytes(w, m.MerkleProof[:]); err != nil {
+		return nil
+	}
+
+	if err := writeBytes(w, m.Signature[:]); err != nil {
+		return nil
+	}
+
 	return nil
 }

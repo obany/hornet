@@ -40,7 +40,7 @@ func (s SignedData) Write(w io.Writer) error {
 	return nil
 }
 
-func ReadSignedData(r io.Reader) (*SignedData, error) {
+func readSignedData(r io.Reader) (*SignedData, error) {
 
 	if err := readAndCheckPayloadType(r, PayloadTypeSignedData); err != nil {
 		return nil, err

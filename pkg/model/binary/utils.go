@@ -45,6 +45,31 @@ func writeVarint(w io.Writer, value uint64) error {
 	return nil
 }
 
+func readUint64(r io.Reader) (uint64, error) {
+	var value uint64
+	err := binary.Read(r, binary.LittleEndian, &value)
+	return value, err
+}
+
+func writeUint64(w io.Writer, value uint64) error {
+	return binary.Write(w, binary.LittleEndian, value)
+}
+
+func writeBytes(w io.Writer, bytes []byte) error {
+	if _, err := w.Write(bytes); err != nil {
+		return err
+	}
+	return nil
+}
+
+func readBytes(r io.Reader, size int) ([]byte, error) {
+	buf := make([]byte, size)
+	if _, err := io.ReadFull(r, buf); err != nil {
+		return nil, err
+	}
+	return buf, nil
+}
+
 func writePayloadType(w io.Writer, payload Payload) error {
 	return writeVarint(w, uint64(payload.GetType()))
 }

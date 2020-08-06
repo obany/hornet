@@ -23,7 +23,7 @@ func (u UnsignedData) Write(w io.Writer) error {
 	return writeByteArray(w, u.Data)
 }
 
-func ReadUnsignedData(r io.Reader) (*UnsignedData, error) {
+func readUnsignedData(r io.Reader) (*UnsignedData, error) {
 
 	if err := readAndCheckPayloadType(r, PayloadTypeUnsignedData); err != nil {
 		return nil, err

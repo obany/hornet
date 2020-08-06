@@ -27,7 +27,7 @@ func (i Indexation) Write(w io.Writer) error {
 	return nil
 }
 
-func ReadIndexation(r io.Reader) (*Indexation, error) {
+func readIndexation(r io.Reader) (*Indexation, error) {
 
 	if err := readAndCheckPayloadType(r, PayloadTypeIndexation); err != nil {
 		return nil, err

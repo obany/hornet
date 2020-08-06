@@ -12,4 +12,5 @@ var (
 	ErrInvalidSubPayload      = errors.New("invalid sub-payload found")
 	ErrInvalidVarintRange     = errors.New("invalid varint range")
 	ErrEmptyPayload           = errors.New("empty payload")
+	ErrInvalidPayloadValue    = errors.New("invalid payload value")
 )
