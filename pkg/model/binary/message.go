@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/binary"
 	"io"
+	"io/ioutil"
 	"math"
 )
 
@@ -52,6 +53,17 @@ func ReadMessage(r io.Reader) (*Message, error) {
 		return nil, err
 	}
 
+	// Check if there are more bytes that we did not parse
+	buf, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(buf) > 0 {
+		return nil, ErrMessageTooLong
+	}
+
+	// Everything passed the checks, so construct our Message
 	message := &Message{
 		Version: 1,
 		Payload: payload,

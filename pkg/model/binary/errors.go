@@ -13,4 +13,5 @@ var (
 	ErrInvalidVarintRange     = errors.New("invalid varint range")
 	ErrEmptyPayload           = errors.New("empty payload")
 	ErrInvalidPayloadValue    = errors.New("invalid payload value")
+	ErrMessageTooLong         = errors.New("message too long")
 )
