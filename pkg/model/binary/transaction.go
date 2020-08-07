@@ -21,7 +21,15 @@ type TransactionOutputs []*SigLockedSingleDeposit
 type UnlockBlocks []UnlockBlock
 
 type UnlockBlock interface {
+	GetType() UnlockBlockType
 	GetLength() uint64
+	Write(w io.Writer) error
+}
+
+type Signature interface {
+	GetType() AddressAndSignatureType
+	GetLength() uint64
+	Write(w io.Writer) error
 }
 
 func (u *UnsignedTransaction) GetLength() uint64 {
@@ -29,6 +37,50 @@ func (u *UnsignedTransaction) GetLength() uint64 {
 		u.Inputs.GetLength() +
 		u.Outputs.GetLength() +
 		u.Payload.GetLength()
+}
+
+func (u *UnsignedTransaction) Write(w io.Writer) error {
+
+	if err := writeVarint(w, u.TransactionType); err != nil {
+		return err
+	}
+
+	if err := writeVarint(w, uint64(len(u.Inputs))); err != nil {
+		return err
+	}
+
+	for _, input := range u.Inputs {
+		if err := input.Write(w); err != nil {
+			return err
+		}
+	}
+
+	if err := writeVarint(w, uint64(len(u.Outputs))); err != nil {
+		return err
+	}
+
+	for _, output := range u.Outputs {
+		if err := output.Write(w); err != nil {
+			return err
+		}
+	}
+
+	if u.Payload != nil {
+		if err := writeVarint(w, u.Payload.GetLength()); err != nil {
+			return err
+		}
+
+		if err := u.Payload.Write(w); err != nil {
+			return err
+		}
+
+	} else {
+		// No payload, so set a length of 0
+		if err := writeVarint(w, 0); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (i TransactionInputs) GetLength() uint64 {
@@ -53,6 +105,18 @@ func (b UnlockBlocks) GetLength() uint64 {
 		len += blk.GetLength()
 	}
 	return len
+}
+
+func (b UnlockBlocks) Write(w io.Writer) error {
+	if err := writeVarint(w, uint64(len(b))); err != nil {
+		return err
+	}
+	for _, blk := range b {
+		if err := blk.Write(w); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (s *SignedTransaction) GetLength() uint64 {
@@ -152,8 +216,60 @@ func readSignedTransaction(r io.Reader) (*SignedTransaction, error) {
 
 func (s *SignedTransaction) Write(w io.Writer) error {
 
-	if err := writePayloadType(w, s.GetType()); err != nil {
+	if err := writePayloadType(w, s); err != nil {
 		return err
 	}
 
+	if err := s.Transaction.Write(w); err != nil {
+		return err
+	}
+
+	if err := s.UnlockBlocks.Write(w); err != nil {
+		return err
+	}
+	return nil
+}
+
+type SignatureUnlockBlock struct {
+	Signature Signature
+}
+
+func (s *SignatureUnlockBlock) GetType() UnlockBlockType {
+	return UnlockBlockTypeSignatureUnlockBlock
+}
+
+func (s *SignatureUnlockBlock) GetLength() uint64 {
+	return varIntLength(uint64(s.GetType())) + s.Signature.GetLength()
+}
+
+func (s *SignatureUnlockBlock) Write(w io.Writer) error {
+	if err := writeVarint(w, uint64(s.GetType())); err != nil {
+		return err
+	}
+	if err := s.Signature.Write(w); err != nil {
+		return err
+	}
+	return nil
+}
+
+type ReferenceUnlockBlock struct {
+	Reference uint64
+}
+
+func (r *ReferenceUnlockBlock) GetType() UnlockBlockType {
+	return UnlockBlockTypeReferenceUnlockBlock
+}
+
+func (r *ReferenceUnlockBlock) GetLength() uint64 {
+	return varIntLength(uint64(r.GetType())) + varIntLength(r.Reference)
+}
+
+func (r *ReferenceUnlockBlock) Write(w io.Writer) error {
+	if err := writeVarint(w, uint64(r.GetType())); err != nil {
+		return err
+	}
+	if err := writeVarint(w, uint64(r.Reference)); err != nil {
+		return err
+	}
+	return nil
 }

@@ -4,16 +4,6 @@ import (
 	"io"
 )
 
-type PayloadType uint64
-
-const (
-	PayloadTypeSignedTransaction PayloadType = iota
-	PayloadTypeMilestone
-	PayloadTypeUnsignedData
-	PayloadTypeSignedData
-	PayloadTypeIndexation
-)
-
 type Payload interface {
 	GetType() PayloadType
 

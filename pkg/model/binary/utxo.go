@@ -80,8 +80,8 @@ func readSigLockedSingleDeposit(r io.Reader) (*SigLockedSingleDeposit, error) {
 	}
 
 	var addr address.Address
-	switch address.Version(addressType) {
-	case address.WOTS:
+	switch AddressAndSignatureType(addressType) {
+	case AddressAndSignatureTypeWOTS:
 		addrData, err := readBytes(r, 49)
 		if err != nil {
 			return nil, err
@@ -90,7 +90,7 @@ func readSigLockedSingleDeposit(r io.Reader) (*SigLockedSingleDeposit, error) {
 		if err != nil {
 			return nil, err
 		}
-	case address.Ed25519:
+	case AddressAndSignatureTypeEd25519:
 		addrData, err := readBytes(r, 49)
 		if err != nil {
 			return nil, err
