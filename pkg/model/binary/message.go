@@ -63,6 +63,35 @@ func ReadMessage(r io.Reader) (*Message, error) {
 	return message, nil
 }
 
+func (m *Message) Write(w io.Writer) error {
+
+	if err := writeVarint(w, m.Version); err != nil {
+		return err
+	}
+
+	if err := writeBytes(w, m.Parent1[:]); err != nil {
+		return err
+	}
+
+	if err := writeBytes(w, m.Parent2[:]); err != nil {
+		return err
+	}
+
+	if err := writeVarint(w, m.Payload.GetLength()); err != nil {
+		return err
+	}
+
+	if err := m.Payload.Write(w); err != nil {
+		return err
+	}
+
+	if err := writeUint64(w, m.Nonce); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func readPayload(r io.Reader) (Payload, error) {
 
 	reader := bufio.NewReader(r)
