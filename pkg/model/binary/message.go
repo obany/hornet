@@ -113,6 +113,10 @@ func readPayload(r io.Reader) (Payload, error) {
 		return nil, ErrWrongPayloadType
 	}
 
+	if payloadType > 16383 {
+		return nil, ErrWrongPayloadType
+	}
+
 	// Create a reader that reads at most the payload length,
 	// so we can pass it over without the risk of it consuming the nonce
 	payloadReader := io.LimitReader(reader, int64(payloadLength))
