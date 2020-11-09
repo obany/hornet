@@ -17,7 +17,7 @@ const (
 	// whether to use HTTP basic auth
 	CfgDashboardBasicAuthEnabled = "dashboard.basicAuth.enabled"
 	// the HTTP basic auth username
-	CfgDashboardBasicAuthUsername = "dashboard.basicAuth.userName"
+	CfgDashboardBasicAuthUsername = "dashboard.basicAuth.username"
 	// the HTTP basic auth password+salt as a sha256 hash
 	CfgDashboardBasicAuthPasswordHash = "dashboard.basicauth.passwordHash"
 	// the HTTP basic auth salt used for hashing the password

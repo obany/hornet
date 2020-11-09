@@ -3,7 +3,7 @@
   "restAPI": {
     "basicAuth": {
       "enabled": false,
-      "userName": "",
+      "username": "",
       "passwordHash": "",
       "passwordSalt": ""
     },
@@ -37,7 +37,7 @@
     "theme": "default",
     "basicAuth": {
       "enabled": false,
-      "userName": "",
+      "username": "",
       "passwordHash": "",
       "passwordSalt": ""
     }
