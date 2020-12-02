@@ -8,6 +8,8 @@ import (
 const (
 	// CfgNodeAlias set an alias to identify a node
 	CfgNodeAlias = "node.alias"
+	// the bind address on which the REST API listens on
+	CfgRestAPIBindAddress = "restAPI.bindAddress"
 	// the bind address on which the dashboard can be access from
 	CfgDashboardBindAddress = "dashboard.bindAddress"
 	// whether to run the dashboard in dev mode
